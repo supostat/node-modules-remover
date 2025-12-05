@@ -6,6 +6,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
+/// Type alias for the progress callback to reduce complexity
+pub type ProgressCallback = Arc<Mutex<dyn FnMut(&str) + Send>>;
+
 #[derive(Debug, Clone)]
 pub struct NodeModulesEntry {
     pub path: PathBuf,
@@ -45,7 +48,7 @@ impl NodeModulesEntry {
 /// When a node_modules is found, we don't recurse into it to find nested ones.
 pub fn scan_for_node_modules(
     root: &Path,
-    progress_callback: Option<Arc<Mutex<dyn FnMut(&str) + Send>>>,
+    progress_callback: Option<ProgressCallback>,
 ) -> Result<Vec<NodeModulesEntry>> {
     let entries = Arc::new(Mutex::new(Vec::new()));
 
@@ -58,7 +61,7 @@ pub fn scan_for_node_modules(
 fn scan_directory(
     dir: &Path,
     entries: &Arc<Mutex<Vec<NodeModulesEntry>>>,
-    progress_callback: &Option<Arc<Mutex<dyn FnMut(&str) + Send>>>,
+    progress_callback: &Option<ProgressCallback>,
 ) -> Result<()> {
     if !dir.is_dir() {
         return Ok(());
