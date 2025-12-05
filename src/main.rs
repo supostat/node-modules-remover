@@ -4,14 +4,18 @@ mod ui;
 use anyhow::Result;
 use clap::Parser;
 use crossterm::{
+    event::{self, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::prelude::*;
 use std::io::stdout;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::Duration;
 
-use scanner::{delete_node_modules, scan_for_node_modules};
+use scanner::{delete_node_modules, scan_for_node_modules, NodeModulesEntry, ProgressCallback};
 use ui::{draw, draw_welcome, handle_input, handle_welcome_input, App, AppMode};
 
 #[derive(Parser, Debug)]
@@ -126,42 +130,92 @@ fn run_tui(initial_entries: Option<Vec<scanner::NodeModulesEntry>>) -> Result<()
         app.mode = AppMode::List;
     }
 
+    // Shared state for async scanning
+    let current_path: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
+    let scan_result: Arc<Mutex<Option<Result<Vec<NodeModulesEntry>>>>> = Arc::new(Mutex::new(None));
+    let mut scan_handle: Option<thread::JoinHandle<()>> = None;
+
     // Main loop
     loop {
         match app.mode {
             AppMode::Welcome => {
+                // Update current path from scanning thread
+                if app.scanning {
+                    if let Ok(path) = current_path.lock() {
+                        app.scanning_current_path = path.clone();
+                    }
+
+                    // Check if scan completed
+                    if let Ok(mut result) = scan_result.lock() {
+                        if let Some(scan_res) = result.take() {
+                            // Wait for thread to finish
+                            if let Some(handle) = scan_handle.take() {
+                                let _ = handle.join();
+                            }
+
+                            match scan_res {
+                                Ok(entries) => {
+                                    if entries.is_empty() {
+                                        app.message =
+                                            Some("No node_modules folders found.".to_string());
+                                    } else {
+                                        app.set_entries(entries);
+                                        app.mode = AppMode::List;
+                                    }
+                                }
+                                Err(e) => {
+                                    app.message = Some(format!("Error scanning: {}", e));
+                                }
+                            }
+                            app.scanning = false;
+                            app.scanning_current_path.clear();
+                        }
+                    }
+                }
+
                 terminal.draw(|f| draw_welcome(f, &mut app))?;
 
-                if let Some(path) = handle_welcome_input(&mut app)? {
-                    // User submitted a path - scan it
-                    app.scanning = true;
-                    app.scan_path = path.clone();
-                    terminal.draw(|f| draw_welcome(f, &mut app))?;
-
+                // Use poll to avoid blocking during scanning
+                if app.scanning {
+                    // Non-blocking: poll for escape key
+                    if event::poll(Duration::from_millis(50))? {
+                        if let Event::Key(key) = event::read()? {
+                            if key.code == KeyCode::Esc {
+                                app.should_quit = true;
+                            }
+                        }
+                    }
+                } else if let Some(path) = handle_welcome_input(&mut app)? {
+                    // User submitted a path - start scanning in background
                     let scan_path = PathBuf::from(shellexpand::tilde(&path).to_string());
 
                     if scan_path.exists() && scan_path.is_dir() {
-                        match scan_for_node_modules(&scan_path, None) {
-                            Ok(entries) => {
-                                if entries.is_empty() {
-                                    app.message =
-                                        Some("No node_modules folders found.".to_string());
-                                    app.scanning = false;
-                                } else {
-                                    app.set_entries(entries);
-                                    app.mode = AppMode::List;
-                                    app.scanning = false;
-                                }
+                        app.scanning = true;
+                        app.scan_path = path.clone();
+                        app.scanning_current_path.clear();
+
+                        // Clone Arc references for the thread
+                        let current_path_clone = Arc::clone(&current_path);
+                        let scan_result_clone = Arc::clone(&scan_result);
+
+                        // Start scanning in background thread
+                        scan_handle = Some(thread::spawn(move || {
+                            let callback: ProgressCallback =
+                                Arc::new(Mutex::new(move |path: &str| {
+                                    if let Ok(mut cp) = current_path_clone.lock() {
+                                        *cp = path.to_string();
+                                    }
+                                }));
+
+                            let result = scan_for_node_modules(&scan_path, Some(callback));
+
+                            if let Ok(mut res) = scan_result_clone.lock() {
+                                *res = Some(result);
                             }
-                            Err(e) => {
-                                app.message = Some(format!("Error scanning: {}", e));
-                                app.scanning = false;
-                            }
-                        }
+                        }));
                     } else {
                         app.message =
                             Some("Invalid path. Please enter a valid directory.".to_string());
-                        app.scanning = false;
                     }
                 }
             }

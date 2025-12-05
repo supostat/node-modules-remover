@@ -21,6 +21,7 @@ pub struct App {
     pub selected: HashSet<usize>,
     pub scanning: bool,
     pub scan_path: String,
+    pub scanning_current_path: String,
     pub total_size: u64,
     pub selected_size: u64,
     pub show_help: bool,
@@ -43,6 +44,7 @@ impl App {
             selected: HashSet::new(),
             scanning: false,
             scan_path: String::new(),
+            scanning_current_path: String::new(),
             total_size: 0,
             selected_size: 0,
             show_help: false,
@@ -639,6 +641,61 @@ pub fn draw_welcome(frame: &mut Frame, app: &mut App) {
 
     let help = Paragraph::new(help_text).alignment(ratatui::layout::Alignment::Center);
     frame.render_widget(help, chunks[4]);
+
+    // Scanning popup
+    if app.scanning {
+        let popup = create_scanning_popup(&app.scan_path, &app.scanning_current_path);
+        let area = centered_rect(70, 30, frame.area());
+        frame.render_widget(Clear, area);
+        frame.render_widget(popup, area);
+    }
+}
+
+fn create_scanning_popup(root_path: &str, current_path: &str) -> Paragraph<'static> {
+    // Truncate paths if too long
+    let display_root = if root_path.len() > 50 {
+        format!("...{}", &root_path[root_path.len() - 47..])
+    } else {
+        root_path.to_string()
+    };
+
+    let display_current = if current_path.len() > 60 {
+        format!("...{}", &current_path[current_path.len() - 57..])
+    } else if current_path.is_empty() {
+        "Starting...".to_string()
+    } else {
+        current_path.to_string()
+    };
+
+    let text = vec![
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            "🔍 Scanning for node_modules...",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        )]),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("Root: ", Style::default().fg(Color::Yellow)),
+            Span::styled(display_root, Style::default().fg(Color::White)),
+        ]),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            display_current,
+            Style::default().fg(Color::DarkGray),
+        )]),
+        Line::from(""),
+    ];
+
+    Paragraph::new(text)
+        .block(
+            Block::default()
+                .title(" Scanning ")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan)),
+        )
+        .alignment(ratatui::layout::Alignment::Center)
 }
 
 /// Handle input for welcome screen. Returns Some(path) if user submitted a path.
