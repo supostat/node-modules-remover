@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # Development service with hot reloading
+  dev:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/app/target
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    command: cargo watch -x run -- .
+
+  # Build service - creates release binary
+  build:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ./dist:/dist
+    command: >
+      sh -c "cp /app/target/x86_64-unknown-linux-musl/release/nm-remover /dist/nm-remover-linux-x86_64"
+
+  # Runtime service - for testing the built binary
+  runtime:
+    build:
+      context: .
+      target: runtime
+    volumes:
+      - ./test-workspace:/workspace:ro
+    tty: true
+    stdin_open: true
+    command: ["/workspace"]
+
+  # Test service
+  test:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/app/target
+    command: cargo test
+
+  # Clippy linting
+  lint:
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/app
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/app/target
+    command: cargo clippy -- -D warnings
+
+volumes:
+  cargo-cache:
+  target-cache:

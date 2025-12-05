@@ -1,0 +1,20 @@
+# Build artifacts
+/target/
+/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test workspace
+test-workspace/
+
+# Cargo lock (optional for binaries, can be committed)
+# Cargo.lock
