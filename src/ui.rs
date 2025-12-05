@@ -174,7 +174,12 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
 
     // Header
     let header = Paragraph::new(vec![Line::from(vec![
-        Span::styled("nm-remover", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+        Span::styled(
+            "nm-remover",
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ),
         Span::raw(" - Node Modules Cleaner"),
     ])])
     .block(Block::default().borders(Borders::ALL).title("Info"));
@@ -196,14 +201,24 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
             let content = Line::from(vec![
                 Span::styled(
                     checkbox,
-                    Style::default().fg(if is_selected { Color::Green } else { Color::Gray }),
+                    Style::default().fg(if is_selected {
+                        Color::Green
+                    } else {
+                        Color::Gray
+                    }),
                 ),
                 Span::raw(" "),
                 Span::styled(path_str.to_string(), Style::default().fg(Color::White)),
                 Span::raw(" "),
-                Span::styled(format!("[{}]", size_str), Style::default().fg(Color::Yellow)),
+                Span::styled(
+                    format!("[{}]", size_str),
+                    Style::default().fg(Color::Yellow),
+                ),
                 Span::raw(" "),
-                Span::styled(format!("({})", modified_str), Style::default().fg(Color::DarkGray)),
+                Span::styled(
+                    format!("({})", modified_str),
+                    Style::default().fg(Color::DarkGray),
+                ),
             ]);
 
             ListItem::new(content)
@@ -244,7 +259,8 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     frame.render_widget(status, chunks[2]);
 
     // Help bar
-    let help_text = "↑/↓: Navigate | Space: Select | a: All | n: None | d: Delete | ?: Help | q: Quit";
+    let help_text =
+        "↑/↓: Navigate | Space: Select | a: All | n: None | d: Delete | ?: Help | q: Quit";
     let help = Paragraph::new(help_text).style(Style::default().fg(Color::DarkGray));
     frame.render_widget(help, chunks[3]);
 
@@ -280,9 +296,10 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
 fn create_help_popup() -> Paragraph<'static> {
     let text = vec![
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Keyboard Shortcuts:", Style::default().add_modifier(Modifier::BOLD)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Keyboard Shortcuts:",
+            Style::default().add_modifier(Modifier::BOLD),
+        )]),
         Line::from(""),
         Line::from("  ↑/k      Move cursor up"),
         Line::from("  ↓/j      Move cursor down"),
@@ -293,9 +310,10 @@ fn create_help_popup() -> Paragraph<'static> {
         Line::from("  ?        Toggle this help"),
         Line::from("  q/Esc    Quit"),
         Line::from(""),
-        Line::from(vec![
-            Span::styled("Press any key to close", Style::default().fg(Color::DarkGray)),
-        ]),
+        Line::from(vec![Span::styled(
+            "Press any key to close",
+            Style::default().fg(Color::DarkGray),
+        )]),
     ];
 
     Paragraph::new(text)
@@ -555,7 +573,9 @@ pub fn draw_welcome(frame: &mut Frame, app: &mut App) {
         .border_style(Style::default().fg(Color::Cyan))
         .title(Span::styled(
             " Enter path to scan ",
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
         ));
 
     let input_area = centered_rect(60, 100, chunks[2]);
@@ -597,9 +617,17 @@ pub fn draw_welcome(frame: &mut Frame, app: &mut App) {
     let help_text = vec![
         Line::from(""),
         Line::from(vec![
-            Span::styled("Enter", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Green)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" - Start scanning  |  "),
-            Span::styled("Esc/q", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::styled(
+                "Esc/q",
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+            ),
             Span::raw(" - Quit"),
         ]),
         Line::from(""),

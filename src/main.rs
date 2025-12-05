@@ -92,7 +92,10 @@ fn main() -> Result<()> {
                 }
             }
 
-            println!("\nFreed approximately {}", bytesize::ByteSize::b(total_size));
+            println!(
+                "\nFreed approximately {}",
+                bytesize::ByteSize::b(total_size)
+            );
             return Ok(());
         }
 
@@ -141,7 +144,8 @@ fn run_tui(initial_entries: Option<Vec<scanner::NodeModulesEntry>>) -> Result<()
                         match scan_for_node_modules(&scan_path, None) {
                             Ok(entries) => {
                                 if entries.is_empty() {
-                                    app.message = Some("No node_modules folders found.".to_string());
+                                    app.message =
+                                        Some("No node_modules folders found.".to_string());
                                     app.scanning = false;
                                 } else {
                                     app.set_entries(entries);
@@ -155,7 +159,8 @@ fn run_tui(initial_entries: Option<Vec<scanner::NodeModulesEntry>>) -> Result<()
                             }
                         }
                     } else {
-                        app.message = Some("Invalid path. Please enter a valid directory.".to_string());
+                        app.message =
+                            Some("Invalid path. Please enter a valid directory.".to_string());
                         app.scanning = false;
                     }
                 }
@@ -170,9 +175,7 @@ fn run_tui(initial_entries: Option<Vec<scanner::NodeModulesEntry>>) -> Result<()
                     let entries_to_delete: Vec<(usize, PathBuf)> = app
                         .selected
                         .iter()
-                        .filter_map(|&i| {
-                            app.entries.get(i).map(|e| (i, e.path.clone()))
-                        })
+                        .filter_map(|&i| app.entries.get(i).map(|e| (i, e.path.clone())))
                         .collect();
 
                     let total = entries_to_delete.len();
@@ -209,7 +212,8 @@ fn run_tui(initial_entries: Option<Vec<scanner::NodeModulesEntry>>) -> Result<()
                             deleted_count, error_count
                         ));
                     } else {
-                        app.message = Some(format!("Successfully deleted {} folders", deleted_count));
+                        app.message =
+                            Some(format!("Successfully deleted {} folders", deleted_count));
                     }
                 }
             }

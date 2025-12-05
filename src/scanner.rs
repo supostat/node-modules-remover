@@ -86,7 +86,11 @@ fn scan_directory(
     let mut dirs_to_recurse = Vec::new();
 
     for path in subdirs {
-        if path.file_name().map(|n| n == "node_modules").unwrap_or(false) {
+        if path
+            .file_name()
+            .map(|n| n == "node_modules")
+            .unwrap_or(false)
+        {
             // Found a node_modules directory - add it and DON'T recurse into it
             let size = calculate_dir_size(&path);
             let last_modified = path.metadata().ok().and_then(|m| m.modified().ok());
