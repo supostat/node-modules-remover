@@ -1,6 +1,6 @@
 [package]
 name = "nm-remover"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Your Name <your.email@example.com>"]
 description = "A TUI tool to find and remove node_modules folders"
