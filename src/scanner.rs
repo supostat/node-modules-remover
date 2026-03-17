@@ -54,7 +54,7 @@ pub fn scan_for_node_modules(
 
     scan_directory(root, &entries, &progress_callback)?;
 
-    let result = entries.lock().unwrap().clone();
+    let result = entries.lock().expect("entries mutex poisoned").clone();
     Ok(result)
 }
 
@@ -98,7 +98,7 @@ fn scan_directory(
             let size = calculate_dir_size(&path);
             let last_modified = path.metadata().ok().and_then(|m| m.modified().ok());
 
-            entries.lock().unwrap().push(NodeModulesEntry {
+            entries.lock().expect("entries mutex poisoned").push(NodeModulesEntry {
                 path,
                 size,
                 last_modified,
