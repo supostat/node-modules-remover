@@ -54,7 +54,8 @@ pub fn scan_for_node_modules(
 
     scan_directory(root, &entries, &progress_callback)?;
 
-    let result = entries.lock().expect("entries mutex poisoned").clone();
+    let mut result = entries.lock().expect("entries mutex poisoned").clone();
+    result.sort_by(|a, b| b.size.cmp(&a.size));
     Ok(result)
 }
 
