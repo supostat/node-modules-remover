@@ -99,11 +99,14 @@ fn scan_directory(
             let size = calculate_dir_size(&path);
             let last_modified = path.metadata().ok().and_then(|m| m.modified().ok());
 
-            entries.lock().expect("entries mutex poisoned").push(NodeModulesEntry {
-                path,
-                size,
-                last_modified,
-            });
+            entries
+                .lock()
+                .expect("entries mutex poisoned")
+                .push(NodeModulesEntry {
+                    path,
+                    size,
+                    last_modified,
+                });
         } else {
             // Not a node_modules - we should recurse into it
             dirs_to_recurse.push(path);

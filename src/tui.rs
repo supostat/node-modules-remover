@@ -1,5 +1,7 @@
 use crate::app::{App, AppMode};
-use crate::scanner::{delete_node_modules, scan_for_node_modules, NodeModulesEntry, ProgressCallback};
+use crate::scanner::{
+    delete_node_modules, scan_for_node_modules, NodeModulesEntry, ProgressCallback,
+};
 use crate::ui::{draw, draw_welcome, handle_input, handle_welcome_input};
 
 use anyhow::Result;
@@ -43,8 +45,7 @@ fn run_event_loop(
     }
 
     let current_path: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
-    let scan_result: Arc<Mutex<Option<Result<Vec<NodeModulesEntry>>>>> =
-        Arc::new(Mutex::new(None));
+    let scan_result: Arc<Mutex<Option<Result<Vec<NodeModulesEntry>>>>> = Arc::new(Mutex::new(None));
     let mut scan_handle: Option<thread::JoinHandle<()>> = None;
 
     loop {
@@ -179,7 +180,8 @@ fn execute_deletion(
     app.delete.start(total);
 
     for (idx, (i, path)) in entries_to_delete.iter().enumerate() {
-        app.delete.update(idx + 1, path.to_string_lossy().to_string());
+        app.delete
+            .update(idx + 1, path.to_string_lossy().to_string());
         terminal.draw(|f| draw(f, app))?;
 
         match delete_node_modules(path) {
