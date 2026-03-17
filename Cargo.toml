@@ -2,12 +2,13 @@
 name = "nm-remover"
 version = "1.0.0"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["ingvar"]
 description = "A TUI tool to find and remove node_modules folders"
 license = "MIT"
-repository = "https://github.com/yourusername/nm-remover"
+repository = "https://github.com/supostat/node-modules-remover"
 keywords = ["node_modules", "cleanup", "tui", "cli"]
 categories = ["command-line-utilities", "filesystem"]
+exclude = [".github/", "docs/", "test-workspace/"]
 
 [[bin]]
 name = "nm-remover"

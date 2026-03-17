@@ -15,33 +15,27 @@ A fast, interactive TUI tool to find and remove `node_modules` folders, written 
 - ✅ **Multi-select** - Select multiple folders for batch deletion
 - ⚡ **Fast** - Parallel directory scanning with Rayon
 - 🎨 **Beautiful TUI** - Interactive terminal UI with Ratatui
-- 🐳 **Docker Support** - Development environment included
 - 🖥️ **Welcome Screen** - Run without arguments for an interactive path input
 - 📈 **Progress Display** - Visual progress bar during deletion
 
 ## Installation
 
-### Quick Install (Recommended)
+### From crates.io (Recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/supostat/node-modules-remover/main/install.sh | bash
+cargo install nm-remover
 ```
+
+### From GitHub Releases
+
+Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/supostat/node-modules-remover/releases) page.
 
 ### Build from Source
 
 ```bash
-# Clone the repository
 git clone https://github.com/supostat/node-modules-remover.git
 cd node-modules-remover
-
-# Build and install
 cargo install --path .
-```
-
-### Using Cargo
-
-```bash
-cargo install nm-remover
 ```
 
 ## Usage
@@ -134,7 +128,6 @@ nm-remover --delete-all /path/to/projects
 ### Prerequisites
 
 - Rust 1.70+
-- Docker & Docker Compose (optional)
 
 ### Local Development
 
@@ -152,23 +145,6 @@ cargo test
 cargo watch -x run
 ```
 
-### Docker Development
-
-```bash
-# Start development environment with hot reload
-docker-compose up dev
-
-# Run tests
-docker-compose up test
-
-# Run linting
-docker-compose up lint
-
-# Build release binary
-docker-compose up build
-# Binary will be in ./dist/
-```
-
 ### Building Release Binaries
 
 ```bash
@@ -184,13 +160,15 @@ cargo build --release --target x86_64-unknown-linux-musl
 ```
 nm-remover/
 ├── src/
-│   ├── main.rs      # Entry point, CLI parsing, main loop
+│   ├── main.rs      # Entry point, CLI parsing
+│   ├── app.rs       # App state, selection, scan/delete states
+│   ├── tui.rs       # Event loop, terminal management
 │   ├── scanner.rs   # Directory scanning logic
-│   └── ui.rs        # TUI components, popups, event handling
+│   └── ui/
+│       ├── mod.rs   # Screen rendering (list, welcome)
+│       ├── popups.rs # Popup widgets (help, confirm, progress)
+│       └── input.rs # Keyboard input handling
 ├── Cargo.toml       # Dependencies
-├── Dockerfile       # Multi-stage Docker build
-├── docker-compose.yml
-├── install.sh       # Installation script
 └── .github/
     └── workflows/   # CI/CD workflows
 ```
@@ -219,6 +197,7 @@ This project includes CI/CD workflows:
 - Triggered on version tags (`v*`)
 - Builds binaries for all platforms
 - Creates GitHub release with artifacts
+- Publishes to crates.io (stable releases only)
 
 ## Contributing
 
