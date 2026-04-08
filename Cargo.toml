@@ -1,17 +1,17 @@
 [package]
-name = "dev-cleaner"
+name = "dev-clean"
 version = "1.1.1"
 edition = "2021"
 authors = ["ingvar"]
 description = "A TUI tool to find and remove node_modules folders"
 license = "MIT"
-repository = "https://github.com/supostat/dev-cleaner"
+repository = "https://github.com/supostat/dev-clean"
 keywords = ["node_modules", "cleanup", "tui", "cli"]
 categories = ["command-line-utilities", "filesystem"]
 exclude = [".github/", "docs/", "test-workspace/"]
 
 [[bin]]
-name = "dev-cleaner"
+name = "dev-clean"
 path = "src/main.rs"
 
 [dependencies]

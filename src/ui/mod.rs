@@ -175,32 +175,32 @@ pub fn draw_welcome(frame: &mut Frame, app: &mut App) {
     let logo = vec![
         Line::from(""),
         Line::from(vec![Span::styled(
-            "  ██████╗ ███████╗██╗   ██╗       ██████╗██╗     ███████╗ █████╗ ███╗   ██╗███████╗██████╗ ",
+            "  ██████╗ ███████╗██╗   ██╗       ██████╗██╗     ███████╗ █████╗ ███╗   ██╗",
             Style::default().fg(Color::Cyan),
         )]),
         Line::from(vec![Span::styled(
-            "  ██╔══██╗██╔════╝██║   ██║      ██╔════╝██║     ██╔════╝██╔══██╗████╗  ██║██╔════╝██╔══██╗",
+            "  ██╔══██╗██╔════╝██║   ██║      ██╔════╝██║     ██╔════╝██╔══██╗████╗  ██║",
             Style::default().fg(Color::Cyan),
         )]),
         Line::from(vec![Span::styled(
-            "  ██║  ██║█████╗  ██║   ██║█████╗██║     ██║     █████╗  ███████║██╔██╗ ██║█████╗  ██████╔╝",
+            "  ██║  ██║█████╗  ██║   ██║█████╗██║     ██║     █████╗  ███████║██╔██╗ ██║",
             Style::default().fg(Color::LightCyan),
         )]),
         Line::from(vec![Span::styled(
-            "  ██║  ██║██╔══╝  ╚██╗ ██╔╝╚════╝██║     ██║     ██╔══╝  ██╔══██║██║╚██╗██║██╔══╝  ██╔══██╗",
+            "  ██║  ██║██╔══╝  ╚██╗ ██╔╝╚════╝██║     ██║     ██╔══╝  ██╔══██║██║╚██╗██║",
             Style::default().fg(Color::LightCyan),
         )]),
         Line::from(vec![Span::styled(
-            "  ██████╔╝███████╗ ╚████╔╝       ╚██████╗███████╗███████╗██║  ██║██║ ╚████║███████╗██║  ██║",
+            "  ██████╔╝███████╗ ╚████╔╝       ╚██████╗███████╗███████╗██║  ██║██║ ╚████║",
             Style::default().fg(Color::White),
         )]),
         Line::from(vec![Span::styled(
-            "  ╚═════╝ ╚══════╝  ╚═══╝         ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝",
+            "  ╚═════╝ ╚══════╝  ╚═══╝         ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝",
             Style::default().fg(Color::White),
         )]),
         Line::from(""),
         Line::from(vec![Span::styled(
-            "                           🗑️  Dev Cleaner  🗑️",
+            "                           🗑️  Dev Clean  🗑️",
             Style::default()
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
@@ -326,7 +326,7 @@ fn build_header(app: &App, visible_indices: &[usize]) -> Paragraph<'static> {
         format!(" | {}", stats_parts.join(" | "))
     };
 
-    let header_line = format!("dev-cleaner | {}{}", display_root, stats_line);
+    let header_line = format!("dev-clean | {}{}", display_root, stats_line);
 
     Paragraph::new(vec![Line::from(vec![Span::styled(
         header_line,

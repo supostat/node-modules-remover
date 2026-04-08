@@ -13,7 +13,7 @@ use scanner::{delete_entry, scan_for_entries};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "dev-cleaner",
+    name = "dev-clean",
     about = "Find and remove development artifacts",
     version,
     author

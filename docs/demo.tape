@@ -1,4 +1,4 @@
-# dev-cleaner demo
+# dev-clean demo
 # Prerequisites: ./docs/setup-demo.sh && cargo build --release
 # Run: vhs docs/demo.tape
 
@@ -14,13 +14,13 @@ Set TypingSpeed 50ms
 Set PlaybackSpeed 1
 
 # Launch
-Type "./target/release/dev-cleaner"
+Type "./target/release/dev-clean"
 Sleep 500ms
 Enter
 Sleep 1.5s
 
 # Enter path on welcome screen
-Type "/tmp/dev-cleaner-demo"
+Type "/tmp/dev-clean-demo"
 Sleep 500ms
 Enter
 Sleep 2s

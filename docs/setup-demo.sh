@@ -2,7 +2,7 @@
 # Creates fake project directories for demo recording
 set -e
 
-DEMO_DIR="/tmp/dev-cleaner-demo"
+DEMO_DIR="/tmp/dev-clean-demo"
 rm -rf "$DEMO_DIR"
 mkdir -p "$DEMO_DIR"
 

@@ -18,28 +18,28 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: dev-cleaner
-            asset_name: dev-cleaner-linux-x86_64
+            artifact_name: dev-clean
+            asset_name: dev-clean-linux-x86_64
 
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            artifact_name: dev-cleaner
-            asset_name: dev-cleaner-linux-x86_64-musl
+            artifact_name: dev-clean
+            asset_name: dev-clean-linux-x86_64-musl
 
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: dev-cleaner
-            asset_name: dev-cleaner-darwin-x86_64
+            artifact_name: dev-clean
+            asset_name: dev-clean-darwin-x86_64
 
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: dev-cleaner
-            asset_name: dev-cleaner-darwin-aarch64
+            artifact_name: dev-clean
+            asset_name: dev-clean-darwin-aarch64
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: dev-cleaner.exe
-            asset_name: dev-cleaner-windows-x86_64.exe
+            artifact_name: dev-clean.exe
+            asset_name: dev-clean-windows-x86_64.exe
 
     steps:
       - uses: actions/checkout@v4

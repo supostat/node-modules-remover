@@ -1,9 +1,9 @@
-# dev-cleaner 🗑️
+# dev-clean 🗑️
 
 A fast, interactive TUI tool to find and remove `node_modules` folders, written in Rust.
 
-[![Build](https://github.com/supostat/dev-cleaner/actions/workflows/build.yml/badge.svg)](https://github.com/supostat/dev-cleaner/actions/workflows/build.yml)
-[![Release](https://github.com/supostat/dev-cleaner/actions/workflows/release.yml/badge.svg)](https://github.com/supostat/dev-cleaner/actions/workflows/release.yml)
+[![Build](https://github.com/supostat/dev-clean/actions/workflows/build.yml/badge.svg)](https://github.com/supostat/dev-clean/actions/workflows/build.yml)
+[![Release](https://github.com/supostat/dev-clean/actions/workflows/release.yml/badge.svg)](https://github.com/supostat/dev-clean/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![Demo](docs/demo.gif)
@@ -23,18 +23,18 @@ A fast, interactive TUI tool to find and remove `node_modules` folders, written 
 ### From crates.io (Recommended)
 
 ```bash
-cargo install dev-cleaner
+cargo install dev-clean
 ```
 
 ### From GitHub Releases
 
-Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/supostat/dev-cleaner/releases) page.
+Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/supostat/dev-clean/releases) page.
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/supostat/dev-cleaner.git
-cd dev-cleaner
+git clone https://github.com/supostat/dev-clean.git
+cd dev-clean
 cargo install --path .
 ```
 
@@ -44,28 +44,28 @@ cargo install --path .
 
 ```bash
 # Launch with welcome screen (enter path interactively)
-dev-cleaner
+dev-clean
 
 # Scan specific directory directly
-dev-cleaner /path/to/projects
+dev-clean /path/to/projects
 
 # Use ~ for home directory
-dev-cleaner ~/Projects
+dev-clean ~/Projects
 ```
 
 ## Workflow
 
 ### 1. Launch the App
 
-Run `dev-cleaner` without arguments to see the welcome screen with ASCII logo, or provide a path directly.
+Run `dev-clean` without arguments to see the welcome screen with ASCII logo, or provide a path directly.
 
 ```
-  ██████╗ ███████╗██╗   ██╗       ██████╗██╗     ███████╗ █████╗ ███╗   ██╗███████╗██████╗
-  ██╔══██╗██╔════╝██║   ██║      ██╔════╝██║     ██╔════╝██╔══██╗████╗  ██║██╔════╝██╔══██╗
-  ██║  ██║█████╗  ██║   ██║█████╗██║     ██║     █████╗  ███████║██╔██╗ ██║█████╗  ██████╔╝
-  ██║  ██║██╔══╝  ╚██╗ ██╔╝╚════╝██║     ██║     ██╔══╝  ██╔══██║██║╚██╗██║██╔══╝  ██╔══██╗
-  ██████╔╝███████╗ ╚████╔╝       ╚██████╗███████╗███████╗██║  ██║██║ ╚████║███████╗██║  ██║
-  ╚═════╝ ╚══════╝  ╚═══╝         ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
+  ██████╗ ███████╗██╗   ██╗       ██████╗██╗     ███████╗ █████╗ ███╗   ██╗
+  ██╔══██╗██╔════╝██║   ██║      ██╔════╝██║     ██╔════╝██╔══██╗████╗  ██║
+  ██║  ██║█████╗  ██║   ██║█████╗██║     ██║     █████╗  ███████║██╔██╗ ██║
+  ██║  ██║██╔══╝  ╚██╗ ██╔╝╚════╝██║     ██║     ██╔══╝  ██╔══██║██║╚██╗██║
+  ██████╔╝███████╗ ╚████╔╝       ╚██████╗███████╗███████╗██║  ██║██║ ╚████║
+  ╚═════╝ ╚══════╝  ╚═══╝         ╚═════╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝
 ```
 
 ### 2. Enter Path or Scan
@@ -117,10 +117,10 @@ Found 5 node_modules | Total: 1.18 GB | Selected: 0 (0 B)
 
 ```bash
 # List all node_modules (no TUI)
-dev-cleaner --list /path/to/projects
+dev-clean --list /path/to/projects
 
 # Delete all without confirmation (⚠️ dangerous!)
-dev-cleaner --delete-all /path/to/projects
+dev-clean --delete-all /path/to/projects
 ```
 
 ## Development
@@ -158,7 +158,7 @@ cargo build --release --target x86_64-unknown-linux-musl
 ## Project Structure
 
 ```
-dev-cleaner/
+dev-clean/
 ├── src/
 │   ├── main.rs      # Entry point, CLI parsing
 │   ├── app.rs       # App state, selection, scan/delete states
