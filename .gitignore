@@ -18,3 +18,14 @@ test-workspace/
 
 # Cargo lock (optional for binaries, can be committed)
 # Cargo.lock
+
+# Claude Code
+.claude/
+CLAUDE.md
+.mcp.json
+
+# dev-workflow
+.dev-vault/
+coverage/
+.env
+.env.*
