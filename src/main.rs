@@ -11,7 +11,7 @@ use scanner::{delete_node_modules, scan_for_node_modules};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "nm-remover",
+    name = "dev-cleaner",
     about = "Find and remove node_modules folders",
     version,
     author

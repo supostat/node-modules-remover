@@ -2,7 +2,7 @@
 # Creates fake node_modules directories for demo recording
 set -e
 
-DEMO_DIR="/tmp/nm-remover-demo"
+DEMO_DIR="/tmp/dev-cleaner-demo"
 rm -rf "$DEMO_DIR"
 mkdir -p "$DEMO_DIR"
 

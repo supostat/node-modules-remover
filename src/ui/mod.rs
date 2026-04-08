@@ -28,7 +28,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     // Header
     let header = Paragraph::new(vec![Line::from(vec![
         Span::styled(
-            "nm-remover",
+            "dev-cleaner",
             Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),

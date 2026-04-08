@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ### Removed
 - Docker support (Dockerfile, docker-compose.yml)
-- install.sh script (use `cargo install nm-remover` instead)
+- install.sh script (use `cargo install dev-cleaner` instead)
 
 ## [1.0.0] - Initial release
 

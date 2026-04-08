@@ -1,9 +1,9 @@
-# nm-remover 🗑️
+# dev-cleaner 🗑️
 
 A fast, interactive TUI tool to find and remove `node_modules` folders, written in Rust.
 
-[![Build](https://github.com/supostat/node-modules-remover/actions/workflows/build.yml/badge.svg)](https://github.com/supostat/node-modules-remover/actions/workflows/build.yml)
-[![Release](https://github.com/supostat/node-modules-remover/actions/workflows/release.yml/badge.svg)](https://github.com/supostat/node-modules-remover/actions/workflows/release.yml)
+[![Build](https://github.com/supostat/dev-cleaner/actions/workflows/build.yml/badge.svg)](https://github.com/supostat/dev-cleaner/actions/workflows/build.yml)
+[![Release](https://github.com/supostat/dev-cleaner/actions/workflows/release.yml/badge.svg)](https://github.com/supostat/dev-cleaner/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![Demo](docs/demo.gif)
@@ -23,18 +23,18 @@ A fast, interactive TUI tool to find and remove `node_modules` folders, written 
 ### From crates.io (Recommended)
 
 ```bash
-cargo install nm-remover
+cargo install dev-cleaner
 ```
 
 ### From GitHub Releases
 
-Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/supostat/node-modules-remover/releases) page.
+Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/supostat/dev-cleaner/releases) page.
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/supostat/node-modules-remover.git
-cd node-modules-remover
+git clone https://github.com/supostat/dev-cleaner.git
+cd dev-cleaner
 cargo install --path .
 ```
 
@@ -44,20 +44,20 @@ cargo install --path .
 
 ```bash
 # Launch with welcome screen (enter path interactively)
-nm-remover
+dev-cleaner
 
 # Scan specific directory directly
-nm-remover /path/to/projects
+dev-cleaner /path/to/projects
 
 # Use ~ for home directory
-nm-remover ~/Projects
+dev-cleaner ~/Projects
 ```
 
 ## Workflow
 
 ### 1. Launch the App
 
-Run `nm-remover` without arguments to see the welcome screen with ASCII logo, or provide a path directly.
+Run `dev-cleaner` without arguments to see the welcome screen with ASCII logo, or provide a path directly.
 
 ```
   ███╗   ██╗███╗   ███╗      ██████╗ ███████╗███╗   ███╗ ██████╗ ██╗   ██╗███████╗██████╗
@@ -117,10 +117,10 @@ Found 5 node_modules | Total: 1.18 GB | Selected: 0 (0 B)
 
 ```bash
 # List all node_modules (no TUI)
-nm-remover --list /path/to/projects
+dev-cleaner --list /path/to/projects
 
 # Delete all without confirmation (⚠️ dangerous!)
-nm-remover --delete-all /path/to/projects
+dev-cleaner --delete-all /path/to/projects
 ```
 
 ## Development
@@ -158,7 +158,7 @@ cargo build --release --target x86_64-unknown-linux-musl
 ## Project Structure
 
 ```
-nm-remover/
+dev-cleaner/
 ├── src/
 │   ├── main.rs      # Entry point, CLI parsing
 │   ├── app.rs       # App state, selection, scan/delete states

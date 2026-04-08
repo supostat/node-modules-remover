@@ -1,4 +1,4 @@
-# nm-remover demo
+# dev-cleaner demo
 # Prerequisites: ./docs/setup-demo.sh && cargo build --release
 # Run: vhs docs/demo.tape
 
@@ -14,13 +14,13 @@ Set TypingSpeed 50ms
 Set PlaybackSpeed 1
 
 # Launch
-Type "./target/release/nm-remover"
+Type "./target/release/dev-cleaner"
 Sleep 500ms
 Enter
 Sleep 1.5s
 
 # Enter path on welcome screen
-Type "/tmp/nm-remover-demo"
+Type "/tmp/dev-cleaner-demo"
 Sleep 500ms
 Enter
 Sleep 2s
