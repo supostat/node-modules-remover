@@ -47,6 +47,8 @@ pub fn create_help_popup() -> Paragraph<'static> {
         Line::from("  a        Select all"),
         Line::from("  n        Deselect all"),
         Line::from("  d        Delete selected"),
+        Line::from("  s        Cycle sort (Size/Date/Name)"),
+        Line::from("  f        Cycle filter (All/node/rust)"),
         Line::from("  ?        Toggle this help"),
         Line::from("  q/Esc    Quit"),
         Line::from(""),

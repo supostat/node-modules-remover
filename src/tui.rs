@@ -19,6 +19,7 @@ use std::time::Duration;
 pub fn run_tui(
     initial_entries: Option<Vec<CleanEntry>>,
     profiles: &[&'static Profile],
+    scan_root: Option<String>,
 ) -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = stdout();
@@ -27,7 +28,7 @@ pub fn run_tui(
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = run_event_loop(&mut terminal, initial_entries, profiles);
+    let result = run_event_loop(&mut terminal, initial_entries, profiles, scan_root);
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -39,11 +40,12 @@ fn run_event_loop(
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
     initial_entries: Option<Vec<CleanEntry>>,
     profiles: &[&'static Profile],
+    scan_root: Option<String>,
 ) -> Result<()> {
     let mut app = App::new();
 
     if let Some(entries) = initial_entries {
-        app.set_entries(entries);
+        app.set_entries(entries, scan_root.unwrap_or_default());
         app.mode = AppMode::List;
     }
 
@@ -119,7 +121,8 @@ fn handle_welcome_tick(
                     if entries.is_empty() {
                         app.message = Some("No matching entries found.".to_string());
                     } else {
-                        app.set_entries(entries);
+                        let scan_root = app.scan.path.clone();
+                        app.set_entries(entries, scan_root);
                         app.mode = AppMode::List;
                     }
                 }
@@ -147,7 +150,7 @@ fn start_scan(
         return;
     }
 
-    app.scan.start(path.to_string());
+    app.scan.start(scan_path.to_string_lossy().to_string());
 
     let current_path_clone = Arc::clone(current_path);
     let scan_result_clone = Arc::clone(scan_result);

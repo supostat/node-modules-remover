@@ -52,6 +52,12 @@ pub fn handle_input(app: &mut App) -> std::io::Result<bool> {
                         app.show_confirm = true;
                     }
                 }
+                KeyCode::Char('s') => {
+                    app.cycle_sort();
+                }
+                KeyCode::Char('f') => {
+                    app.cycle_filter();
+                }
                 KeyCode::Char('?') => {
                     app.show_help = true;
                 }

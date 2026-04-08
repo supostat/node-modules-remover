@@ -15,6 +15,7 @@ pub struct CleanEntry {
     pub path: PathBuf,
     pub size: u64,
     pub last_modified: Option<SystemTime>,
+    pub profile_name: &'static str,
 }
 
 impl CleanEntry {
@@ -104,11 +105,11 @@ fn scan_directory(
 
         let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
-        let matched_by_profile = profiles
+        let matched_profile = profiles
             .iter()
-            .any(|profile| profile.targets.contains(&dir_name) && profile.has_marker(&path));
+            .find(|profile| profile.targets.contains(&dir_name) && profile.has_marker(&path));
 
-        if matched_by_profile {
+        if let Some(profile) = matched_profile {
             let size = calculate_dir_size(&path);
             let last_modified = path.metadata().ok().and_then(|m| m.modified().ok());
 
@@ -119,6 +120,7 @@ fn scan_directory(
                     path,
                     size,
                     last_modified,
+                    profile_name: profile.name,
                 });
         } else {
             dirs_to_recurse.push(path);
@@ -179,6 +181,7 @@ mod tests {
         // Should only find project1/node_modules, not the nested one
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].path, nm1);
+        assert_eq!(results[0].profile_name, "node");
     }
 
     #[test]
@@ -230,6 +233,7 @@ mod tests {
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].path, target);
+        assert_eq!(results[0].profile_name, "rust");
     }
 
     #[test]

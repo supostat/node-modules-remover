@@ -63,7 +63,7 @@ fn main() -> Result<()> {
     let profiles = parse_profiles(&args.profile);
 
     let Some(path) = args.path else {
-        return tui::run_tui(None, &profiles);
+        return tui::run_tui(None, &profiles, None);
     };
 
     let path = path.canonicalize().unwrap_or_else(|_| path.clone());
@@ -101,7 +101,11 @@ fn main() -> Result<()> {
         return delete_all_entries(&entries);
     }
 
-    tui::run_tui(Some(entries), &profiles)
+    tui::run_tui(
+        Some(entries),
+        &profiles,
+        Some(path.to_string_lossy().to_string()),
+    )
 }
 
 fn print_entries(entries: &[scanner::CleanEntry]) -> Result<()> {

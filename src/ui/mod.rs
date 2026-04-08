@@ -4,7 +4,7 @@ mod popups;
 pub use input::{handle_input, handle_welcome_input};
 use popups::{centered_rect, create_scanning_popup};
 
-use crate::app::App;
+use crate::app::{App, ProfileFilter};
 use popups::{create_confirm_popup, create_deleting_popup, create_help_popup};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
@@ -25,29 +25,28 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         ])
         .split(frame.area());
 
-    // Header
-    let header = Paragraph::new(vec![Line::from(vec![
-        Span::styled(
-            "dev-cleaner",
-            Style::default()
-                .fg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        ),
-        Span::raw(" - Dev Cleaner"),
-    ])])
-    .block(Block::default().borders(Borders::ALL).title("Info"));
-    frame.render_widget(header, chunks[0]);
+    // Main list — render only visible entries (respecting filter)
+    let visible = app.visible_indices();
 
-    // Main list
-    let items: Vec<ListItem> = app
-        .entries
+    // Header — informative summary (uses visible indices for accurate stats)
+    let header = build_header(app, &visible);
+    frame.render_widget(header, chunks[0]);
+    let scan_root = &app.scan_root;
+
+    let items: Vec<ListItem> = visible
         .iter()
-        .enumerate()
-        .map(|(i, entry)| {
-            let is_selected = app.selection.contains(i);
+        .map(|&idx| {
+            let entry = &app.entries[idx];
+            let is_selected = app.selection.contains(idx);
             let checkbox = if is_selected { "[✓]" } else { "[ ]" };
 
-            let path_str = entry.path.to_string_lossy();
+            let badge_color = match entry.profile_name {
+                "node" => Color::Green,
+                "rust" => Color::LightYellow,
+                _ => Color::White,
+            };
+
+            let relative_path = make_relative_path(&entry.path.to_string_lossy(), scan_root);
             let size_str = entry.size_human();
             let modified_str = entry.last_modified_human();
 
@@ -61,7 +60,14 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
                     }),
                 ),
                 Span::raw(" "),
-                Span::styled(path_str.to_string(), Style::default().fg(Color::White)),
+                Span::styled(
+                    format!("[{}]", entry.profile_name),
+                    Style::default()
+                        .fg(badge_color)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" "),
+                Span::styled(relative_path, Style::default().fg(Color::White)),
                 Span::raw(" "),
                 Span::styled(
                     format!("[{}]", size_str),
@@ -78,12 +84,21 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         })
         .collect();
 
+    let filter_label = match &app.filter_mode {
+        ProfileFilter::All => "All".to_string(),
+        ProfileFilter::Only(name) => name.to_string(),
+    };
+
+    let visible_total_size: u64 = visible.iter().map(|&idx| app.entries[idx].size).sum();
+
     let title = format!(
-        "Found {} entries | Total: {} | Selected: {} ({})",
-        app.entries.len(),
-        bytesize::ByteSize::b(app.total_size),
+        "Showing {} entries | Total: {} | Selected: {} ({}) | Sort: {} | Filter: {}",
+        visible.len(),
+        bytesize::ByteSize::b(visible_total_size),
         app.selection.len(),
-        bytesize::ByteSize::b(app.selection.total_size())
+        bytesize::ByteSize::b(app.selection.total_size()),
+        app.sort_mode.label(),
+        filter_label,
     );
 
     let list = List::new(items)
@@ -113,7 +128,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
 
     // Help bar
     let help_text =
-        "↑/↓: Navigate | Space: Select | a: All | n: None | d: Delete | ?: Help | q: Quit";
+        "↑/↓: Navigate | Space: Select | a: All | n: None | d: Delete | s: Sort | f: Filter | ?: Help | q: Quit";
     let help = Paragraph::new(help_text).style(Style::default().fg(Color::DarkGray));
     frame.render_widget(help, chunks[3]);
 
@@ -275,4 +290,75 @@ pub fn draw_welcome(frame: &mut Frame, app: &mut App) {
         frame.render_widget(Clear, area);
         frame.render_widget(popup, area);
     }
+}
+
+fn build_header(app: &App, visible_indices: &[usize]) -> Paragraph<'static> {
+    let display_root = if app.scan_root.is_empty() {
+        "N/A".to_string()
+    } else {
+        shorten_home_path(&app.scan_root)
+    };
+
+    let mut profile_stats: std::collections::HashMap<&str, (usize, u64)> =
+        std::collections::HashMap::new();
+    for &idx in visible_indices {
+        let entry = &app.entries[idx];
+        let stat = profile_stats.entry(entry.profile_name).or_insert((0, 0));
+        stat.0 += 1;
+        stat.1 += entry.size;
+    }
+
+    let mut stats_parts: Vec<String> = Vec::new();
+    for profile_name in &["node", "rust"] {
+        if let Some((count, size)) = profile_stats.get(profile_name) {
+            stats_parts.push(format!(
+                "{}: {} ({})",
+                profile_name,
+                count,
+                bytesize::ByteSize::b(*size)
+            ));
+        }
+    }
+
+    let stats_line = if stats_parts.is_empty() {
+        String::new()
+    } else {
+        format!(" | {}", stats_parts.join(" | "))
+    };
+
+    let header_line = format!("dev-cleaner | {}{}", display_root, stats_line);
+
+    Paragraph::new(vec![Line::from(vec![Span::styled(
+        header_line,
+        Style::default()
+            .fg(Color::Cyan)
+            .add_modifier(Modifier::BOLD),
+    )])])
+    .block(Block::default().borders(Borders::ALL).title("Info"))
+}
+
+fn make_relative_path(path: &str, scan_root: &str) -> String {
+    if scan_root.is_empty() {
+        return path.to_string();
+    }
+    let root = scan_root.trim_end_matches('/');
+    if let Some(rest) = path.strip_prefix(root) {
+        let relative = rest.trim_start_matches('/');
+        if relative.is_empty() {
+            ".".to_string()
+        } else {
+            relative.to_string()
+        }
+    } else {
+        path.to_string()
+    }
+}
+
+fn shorten_home_path(path: &str) -> String {
+    if let Ok(home) = std::env::var("HOME") {
+        if let Some(rest) = path.strip_prefix(&home) {
+            return format!("~{}", rest);
+        }
+    }
+    path.to_string()
 }
