@@ -1,4 +1,4 @@
-use crate::scanner::NodeModulesEntry;
+use crate::scanner::CleanEntry;
 use ratatui::widgets::ListState;
 use std::collections::HashSet;
 
@@ -31,7 +31,7 @@ impl SelectionState {
         }
     }
 
-    pub fn select_all(&mut self, entries: &[NodeModulesEntry]) {
+    pub fn select_all(&mut self, entries: &[CleanEntry]) {
         self.indices.clear();
         self.total_size = 0;
         for (i, entry) in entries.iter().enumerate() {
@@ -124,7 +124,7 @@ impl DeleteState {
 }
 
 pub struct App {
-    pub entries: Vec<NodeModulesEntry>,
+    pub entries: Vec<CleanEntry>,
     pub list_state: ListState,
     pub selection: SelectionState,
     pub scan: ScanState,
@@ -158,7 +158,7 @@ impl App {
         }
     }
 
-    pub fn set_entries(&mut self, entries: Vec<NodeModulesEntry>) {
+    pub fn set_entries(&mut self, entries: Vec<CleanEntry>) {
         self.total_size = entries.iter().map(|e| e.size).sum();
         self.entries = entries;
         if !self.entries.is_empty() {

@@ -1,3 +1,4 @@
+use crate::profiles::Profile;
 use anyhow::Result;
 use bytesize::ByteSize;
 use rayon::prelude::*;
@@ -10,13 +11,13 @@ use std::time::SystemTime;
 pub type ProgressCallback = Arc<Mutex<dyn FnMut(&str) + Send>>;
 
 #[derive(Debug, Clone)]
-pub struct NodeModulesEntry {
+pub struct CleanEntry {
     pub path: PathBuf,
     pub size: u64,
     pub last_modified: Option<SystemTime>,
 }
 
-impl NodeModulesEntry {
+impl CleanEntry {
     pub fn size_human(&self) -> String {
         ByteSize::b(self.size).to_string()
     }
@@ -44,15 +45,17 @@ impl NodeModulesEntry {
     }
 }
 
-/// Scan for node_modules directories, only finding first-level occurrences.
-/// When a node_modules is found, we don't recurse into it to find nested ones.
-pub fn scan_for_node_modules(
+/// Scan for target directories matching the given profiles.
+/// Only finds first-level occurrences per profile target.
+/// Validates that a marker file exists in the parent directory before including.
+pub fn scan_for_entries(
     root: &Path,
+    profiles: &[&Profile],
     progress_callback: Option<ProgressCallback>,
-) -> Result<Vec<NodeModulesEntry>> {
+) -> Result<Vec<CleanEntry>> {
     let entries = Arc::new(Mutex::new(Vec::new()));
 
-    scan_directory(root, &entries, &progress_callback)?;
+    scan_directory(root, profiles, &entries, &progress_callback)?;
 
     let mut result = entries.lock().expect("entries mutex poisoned").clone();
     result.sort_by(|a, b| b.size.cmp(&a.size));
@@ -61,7 +64,8 @@ pub fn scan_for_node_modules(
 
 fn scan_directory(
     dir: &Path,
-    entries: &Arc<Mutex<Vec<NodeModulesEntry>>>,
+    profiles: &[&Profile],
+    entries: &Arc<Mutex<Vec<CleanEntry>>>,
     progress_callback: &Option<ProgressCallback>,
 ) -> Result<()> {
     if !dir.is_dir() {
@@ -86,36 +90,44 @@ fn scan_directory(
         .filter(|path| path.is_dir())
         .collect();
 
-    // Check if any subdirectory is node_modules
     let mut dirs_to_recurse = Vec::new();
 
     for path in subdirs {
-        if path
-            .file_name()
-            .map(|n| n == "node_modules")
-            .unwrap_or(false)
-        {
-            // Found a node_modules directory - add it and DON'T recurse into it
+        let is_symlink = path
+            .symlink_metadata()
+            .map(|m| m.file_type().is_symlink())
+            .unwrap_or(false);
+
+        if is_symlink {
+            continue;
+        }
+
+        let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
+        let matched_by_profile = profiles
+            .iter()
+            .any(|profile| profile.targets.contains(&dir_name) && profile.has_marker(&path));
+
+        if matched_by_profile {
             let size = calculate_dir_size(&path);
             let last_modified = path.metadata().ok().and_then(|m| m.modified().ok());
 
             entries
                 .lock()
                 .expect("entries mutex poisoned")
-                .push(NodeModulesEntry {
+                .push(CleanEntry {
                     path,
                     size,
                     last_modified,
                 });
         } else {
-            // Not a node_modules - we should recurse into it
             dirs_to_recurse.push(path);
         }
     }
 
-    // Recurse into non-node_modules directories in parallel
+    // Recurse into non-matched directories in parallel
     dirs_to_recurse.par_iter().for_each(|path| {
-        let _ = scan_directory(path, entries, progress_callback);
+        let _ = scan_directory(path, profiles, entries, progress_callback);
     });
 
     Ok(())
@@ -131,7 +143,15 @@ fn calculate_dir_size(path: &Path) -> u64 {
         .sum()
 }
 
-pub fn delete_node_modules(path: &Path) -> Result<()> {
+pub fn delete_entry(path: &Path) -> Result<()> {
+    let metadata = path
+        .symlink_metadata()
+        .map_err(|e| anyhow::anyhow!("Failed to read metadata for '{}': {}", path.display(), e))?;
+
+    if metadata.file_type().is_symlink() {
+        anyhow::bail!("Refusing to delete '{}': path is a symlink", path.display());
+    }
+
     fs::remove_dir_all(path)?;
     Ok(())
 }
@@ -139,19 +159,22 @@ pub fn delete_node_modules(path: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::profiles::{ALL_PROFILES, PROFILE_NODE, PROFILE_RUST};
     use std::fs;
     use tempfile::tempdir;
 
     #[test]
-    fn test_finds_first_level_node_modules() {
+    fn test_finds_first_level_node_modules_with_marker() {
         let temp = tempdir().unwrap();
         let project1 = temp.path().join("project1");
         let nm1 = project1.join("node_modules");
         let nested_nm = nm1.join("some_package").join("node_modules");
 
         fs::create_dir_all(&nested_nm).unwrap();
+        fs::write(project1.join("package.json"), "{}").unwrap();
 
-        let results = scan_for_node_modules(temp.path(), None).unwrap();
+        let profiles: Vec<&Profile> = vec![&PROFILE_NODE];
+        let results = scan_for_entries(temp.path(), &profiles, None).unwrap();
 
         // Should only find project1/node_modules, not the nested one
         assert_eq!(results.len(), 1);
@@ -159,17 +182,91 @@ mod tests {
     }
 
     #[test]
-    fn test_finds_multiple_projects() {
+    fn test_skips_node_modules_without_marker() {
+        let temp = tempdir().unwrap();
+        let project = temp.path().join("project");
+        let nm = project.join("node_modules");
+
+        fs::create_dir_all(&nm).unwrap();
+        // No package.json — should not be found
+
+        let profiles: Vec<&Profile> = vec![&PROFILE_NODE];
+        let results = scan_for_entries(temp.path(), &profiles, None).unwrap();
+
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_finds_multiple_projects_with_markers() {
         let temp = tempdir().unwrap();
 
-        let project1_nm = temp.path().join("project1").join("node_modules");
-        let project2_nm = temp.path().join("project2").join("node_modules");
+        let project1 = temp.path().join("project1");
+        let project1_nm = project1.join("node_modules");
+        let project2 = temp.path().join("project2");
+        let project2_nm = project2.join("node_modules");
 
         fs::create_dir_all(&project1_nm).unwrap();
+        fs::write(project1.join("package.json"), "{}").unwrap();
         fs::create_dir_all(&project2_nm).unwrap();
+        fs::write(project2.join("package.json"), "{}").unwrap();
 
-        let results = scan_for_node_modules(temp.path(), None).unwrap();
+        let profiles: Vec<&Profile> = vec![&PROFILE_NODE];
+        let results = scan_for_entries(temp.path(), &profiles, None).unwrap();
 
         assert_eq!(results.len(), 2);
+    }
+
+    #[test]
+    fn test_finds_rust_target_with_marker() {
+        let temp = tempdir().unwrap();
+        let project = temp.path().join("rust-project");
+        let target = project.join("target");
+
+        fs::create_dir_all(&target).unwrap();
+        fs::write(project.join("Cargo.toml"), "[package]").unwrap();
+
+        let profiles: Vec<&Profile> = vec![&PROFILE_RUST];
+        let results = scan_for_entries(temp.path(), &profiles, None).unwrap();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].path, target);
+    }
+
+    #[test]
+    fn test_skips_rust_target_without_marker() {
+        let temp = tempdir().unwrap();
+        let project = temp.path().join("rust-project");
+        let target = project.join("target");
+
+        fs::create_dir_all(&target).unwrap();
+        // No Cargo.toml
+
+        let profiles: Vec<&Profile> = vec![&PROFILE_RUST];
+        let results = scan_for_entries(temp.path(), &profiles, None).unwrap();
+
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_all_profiles_find_both_node_and_rust() {
+        let temp = tempdir().unwrap();
+
+        let node_project = temp.path().join("node-project");
+        let nm = node_project.join("node_modules");
+        fs::create_dir_all(&nm).unwrap();
+        fs::write(node_project.join("package.json"), "{}").unwrap();
+
+        let rust_project = temp.path().join("rust-project");
+        let target = rust_project.join("target");
+        fs::create_dir_all(&target).unwrap();
+        fs::write(rust_project.join("Cargo.toml"), "[package]").unwrap();
+
+        let profiles: Vec<&Profile> = ALL_PROFILES.to_vec();
+        let results = scan_for_entries(temp.path(), &profiles, None).unwrap();
+
+        assert_eq!(results.len(), 2);
+        let paths: Vec<&Path> = results.iter().map(|e| e.path.as_path()).collect();
+        assert!(paths.contains(&nm.as_path()));
+        assert!(paths.contains(&target.as_path()));
     }
 }

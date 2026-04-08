@@ -184,7 +184,7 @@ pub fn create_scanning_popup(root_path: &str, current_path: &str) -> Paragraph<'
     let text = vec![
         Line::from(""),
         Line::from(vec![Span::styled(
-            "🔍 Scanning for node_modules...",
+            "🔍 Scanning for artifacts...".to_string(),
             Style::default()
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),

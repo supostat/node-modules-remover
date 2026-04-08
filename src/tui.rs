@@ -1,7 +1,6 @@
 use crate::app::{App, AppMode};
-use crate::scanner::{
-    delete_node_modules, scan_for_node_modules, NodeModulesEntry, ProgressCallback,
-};
+use crate::profiles::Profile;
+use crate::scanner::{delete_entry, scan_for_entries, CleanEntry, ProgressCallback};
 use crate::ui::{draw, draw_welcome, handle_input, handle_welcome_input};
 
 use anyhow::Result;
@@ -17,7 +16,10 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-pub fn run_tui(initial_entries: Option<Vec<NodeModulesEntry>>) -> Result<()> {
+pub fn run_tui(
+    initial_entries: Option<Vec<CleanEntry>>,
+    profiles: &[&'static Profile],
+) -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = stdout();
     execute!(stdout, EnterAlternateScreen)?;
@@ -25,7 +27,7 @@ pub fn run_tui(initial_entries: Option<Vec<NodeModulesEntry>>) -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let result = run_event_loop(&mut terminal, initial_entries);
+    let result = run_event_loop(&mut terminal, initial_entries, profiles);
 
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
@@ -35,7 +37,8 @@ pub fn run_tui(initial_entries: Option<Vec<NodeModulesEntry>>) -> Result<()> {
 
 fn run_event_loop(
     terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>,
-    initial_entries: Option<Vec<NodeModulesEntry>>,
+    initial_entries: Option<Vec<CleanEntry>>,
+    profiles: &[&'static Profile],
 ) -> Result<()> {
     let mut app = App::new();
 
@@ -45,7 +48,7 @@ fn run_event_loop(
     }
 
     let current_path: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
-    let scan_result: Arc<Mutex<Option<Result<Vec<NodeModulesEntry>>>>> = Arc::new(Mutex::new(None));
+    let scan_result: Arc<Mutex<Option<Result<Vec<CleanEntry>>>>> = Arc::new(Mutex::new(None));
     let mut scan_handle: Option<thread::JoinHandle<()>> = None;
 
     loop {
@@ -66,6 +69,7 @@ fn run_event_loop(
                     start_scan(
                         &mut app,
                         &path,
+                        profiles,
                         &current_path,
                         &scan_result,
                         &mut scan_handle,
@@ -93,7 +97,7 @@ fn run_event_loop(
 fn handle_welcome_tick(
     app: &mut App,
     current_path: &Arc<Mutex<String>>,
-    scan_result: &Arc<Mutex<Option<Result<Vec<NodeModulesEntry>>>>>,
+    scan_result: &Arc<Mutex<Option<Result<Vec<CleanEntry>>>>>,
     scan_handle: &mut Option<thread::JoinHandle<()>>,
 ) {
     if !app.scan.active {
@@ -113,7 +117,7 @@ fn handle_welcome_tick(
             match scan_res {
                 Ok(entries) => {
                     if entries.is_empty() {
-                        app.message = Some("No node_modules folders found.".to_string());
+                        app.message = Some("No matching entries found.".to_string());
                     } else {
                         app.set_entries(entries);
                         app.mode = AppMode::List;
@@ -131,8 +135,9 @@ fn handle_welcome_tick(
 fn start_scan(
     app: &mut App,
     path: &str,
+    profiles: &[&'static Profile],
     current_path: &Arc<Mutex<String>>,
-    scan_result: &Arc<Mutex<Option<Result<Vec<NodeModulesEntry>>>>>,
+    scan_result: &Arc<Mutex<Option<Result<Vec<CleanEntry>>>>>,
     scan_handle: &mut Option<thread::JoinHandle<()>>,
 ) {
     let scan_path = PathBuf::from(shellexpand::tilde(path).to_string());
@@ -146,6 +151,7 @@ fn start_scan(
 
     let current_path_clone = Arc::clone(current_path);
     let scan_result_clone = Arc::clone(scan_result);
+    let profiles_owned: Vec<&'static Profile> = profiles.to_vec();
 
     *scan_handle = Some(thread::spawn(move || {
         let callback: ProgressCallback = Arc::new(Mutex::new(move |path: &str| {
@@ -154,7 +160,7 @@ fn start_scan(
             }
         }));
 
-        let result = scan_for_node_modules(&scan_path, Some(callback));
+        let result = scan_for_entries(&scan_path, &profiles_owned, Some(callback));
 
         if let Ok(mut res) = scan_result_clone.lock() {
             *res = Some(result);
@@ -184,7 +190,7 @@ fn execute_deletion(
             .update(idx + 1, path.to_string_lossy().to_string());
         terminal.draw(|f| draw(f, app))?;
 
-        match delete_node_modules(path) {
+        match delete_entry(path) {
             Ok(()) => {
                 deleted_count += 1;
                 deleted_indices.push(*i);
@@ -200,11 +206,11 @@ fn execute_deletion(
 
     app.message = if error_count > 0 {
         Some(format!(
-            "Deleted {} folders, {} errors",
+            "Deleted {} entries, {} errors",
             deleted_count, error_count
         ))
     } else {
-        Some(format!("Successfully deleted {} folders", deleted_count))
+        Some(format!("Successfully deleted {} entries", deleted_count))
     };
 
     Ok(())

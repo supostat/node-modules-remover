@@ -33,7 +33,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
                 .fg(Color::Cyan)
                 .add_modifier(Modifier::BOLD),
         ),
-        Span::raw(" - Node Modules Cleaner"),
+        Span::raw(" - Dev Cleaner"),
     ])])
     .block(Block::default().borders(Borders::ALL).title("Info"));
     frame.render_widget(header, chunks[0]);
@@ -79,7 +79,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
         .collect();
 
     let title = format!(
-        "Found {} node_modules | Total: {} | Selected: {} ({})",
+        "Found {} entries | Total: {} | Selected: {} ({})",
         app.entries.len(),
         bytesize::ByteSize::b(app.total_size),
         app.selection.len(),
@@ -185,7 +185,7 @@ pub fn draw_welcome(frame: &mut Frame, app: &mut App) {
         )]),
         Line::from(""),
         Line::from(vec![Span::styled(
-            "                           🗑️  Node Modules Cleanup Tool  🗑️",
+            "                           🗑️  Dev Cleaner  🗑️",
             Style::default()
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD),
